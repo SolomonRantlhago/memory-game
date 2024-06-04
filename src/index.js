@@ -1,11 +1,15 @@
 const uniqueImages = ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg"];
 const totalPairs = uniqueImages.length;
-const timeLimit = 50;
+const timeLimit = 60;
 const timeLeftElement = document.getElementById("time-left");
 let firstPick = null;
 let secondPick = null;
 let matches = 0;
 let timer;
+
+function countMatches(matches) {
+  return matches;
+}
 
 function shuffleImages(images) {
   return images.concat(images).sort(() => 0.5 - Math.random());
@@ -52,22 +56,28 @@ function onGridItemClick(event) {
     firstPick = gridItem;
   } else {
     secondPick = gridItem;
-    setTimeout(checkMatch(firstPick, secondPick), 300);
+    setTimeout(() => {
+      checkMatch(firstPick, secondPick);
+    }, 700);
   }
+}
+function countMatches(matches) {
+  return matches;
 }
 
 function checkMatch(first, second) {
+  let updatedMatches = countMatches(matches);
   if (first.dataset.image === second.dataset.image) {
     first.classList.add("match");
     second.classList.add("match");
-    matches += 1;
+    updatedMatches += 1;
     firstPick = null;
     secondPick = null;
-    if (matches === totalPairs) {
+    if (updatedMatches === totalPairs) {
       clearInterval(timer);
       setTimeout(
         showCongratsModal,
-        300,
+        700,
         "Congratulations! You matched all the pairs!",
         "Congratulations!"
       );
@@ -77,13 +87,15 @@ function checkMatch(first, second) {
     second.classList.add("unmatch");
     setTimeout(() => {
       first.classList.remove("show", "unmatch");
-      first.querySelector("img").classList.add("d-none");
       second.classList.remove("show", "unmatch");
+      first.querySelector("img").classList.add("d-none");
       second.querySelector("img").classList.add("d-none");
       firstPick = null;
       secondPick = null;
-    }, 300);
+    }, 700);
   }
+  matches = updatedMatches;
+  return updatedMatches;
 }
 
 function startGame() {
@@ -91,16 +103,17 @@ function startGame() {
   firstPick = null;
   secondPick = null;
   timeLeftElement.innerHTML = timeLimit;
-  timer = setInterval(updateTimer, 1000);
+  timer = setInterval(updateTimer, 700);
 }
 
 function updateTimer() {
   let currentTime = parseInt(timeLeftElement.textContent, 10);
   currentTime -= 1;
-  timeLeftElement.textContent = currentTime;
+  timeLeftElement.textContent = Math.max(0, currentTime);
+
   if (currentTime <= 0) {
     clearInterval(timer);
-    setTimeout(showCongratsModal, 500, "Time's up! Try again.", "Time's Up!");
+    showCongratsModal("Time's up! Try again.", "Time's Up!");
   }
 }
 
@@ -153,9 +166,17 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 module.exports = {
-  initializeGameBoard,
+  uniqueImages,
+  totalPairs,
+  timeLimit,
+  timeLeftElement,
+  firstPick,
+  secondPick,
+  countMatches,
+  timer,
   shuffleImages,
   createGridItem,
+  initializeGameBoard,
   onGridItemClick,
   checkMatch,
   startGame,

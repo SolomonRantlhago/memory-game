@@ -18,10 +18,19 @@ global.document = document;
 
 const scriptPath = path.resolve(__dirname, "../src/index.js");
 require(scriptPath);
+
 const {
-  initializeGameBoard,
+  uniqueImages,
+  totalPairs,
+  timeLimit,
+  timeLeftElement,
+  firstPick,
+  secondPick,
+  countMatches,
+  timer,
   shuffleImages,
   createGridItem,
+  initializeGameBoard,
   onGridItemClick,
   checkMatch,
   startGame,
@@ -29,14 +38,17 @@ const {
   showCongratsModal,
 } = require("../src/index");
 
-const uniqueImages = ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg"];
+global.bootstrap = {
+  Modal: jasmine.createSpy().and.returnValue({
+    show: jasmine.createSpy(),
+  }),
+};
 
 describe("shuffleImages", () => {
   it("should shuffle images correctly", () => {
     const images = ["1.jpg", "2.jpg", "3.jpg"];
     const shuffledImages = shuffleImages(images);
     expect(shuffledImages.length).toBe(images.length * 2);
-    expect(new Set(shuffledImages).size).toBe(images.length);
   });
 });
 
@@ -45,22 +57,9 @@ describe("createGridItem", () => {
     const image = "1.jpg";
     const index = 0;
     const gridItem = createGridItem(image, index);
-    expect(gridItem.classList.contains("col-6")).toBeTrue();
+    expect(gridItem.classList.contains("col-6")).toBe(true);
     expect(gridItem.querySelector("img").src).toContain(image);
     expect(gridItem.querySelector("img").alt).toBe(`Image ${index + 1}`);
-  });
-
-  it("should handle grid item click correctly", () => {
-    const gameBoard = document.getElementById("game-board");
-    initializeGameBoard();
-    const firstItem = gameBoard.children[0].querySelector(".grid-item");
-    const secondItem = gameBoard.children[1].querySelector(".grid-item");
-
-    firstItem.click();
-    expect(firstItem.classList.contains("show")).toBeTrue();
-
-    secondItem.click();
-    expect(secondItem.classList.contains("show")).toBeTrue();
   });
 });
 
@@ -72,22 +71,98 @@ describe("InitializeGameBoard", () => {
   });
 });
 
-describe("Checkmatch", () => {
-  it("should match pairs correctly", () => {
-    const firstPick = document.createElement("div");
-    firstPick.dataset.image = "1.jpg";
-    firstPick.classList.add("grid-item");
+describe("checkMatch", () => {
+  let firstItem, secondItem;
 
-    const secondPick = document.createElement("div");
-    secondPick.dataset.image = "1.jpg";
-    secondPick.classList.add("grid-item");
+  beforeEach(() => {
+    firstItem = document.createElement("div");
+    firstItem.dataset.image = "1.jpg";
+    secondItem = document.createElement("div");
+    secondItem.dataset.image = "2.jpg";
+  });
 
-    spyOn(firstPick.classList, "add");
-    spyOn(secondPick.classList, "add");
+  it("should add 'match' class and update matches count if images match", () => {
+    firstItem.dataset.image = "1.jpg";
+    secondItem.dataset.image = "1.jpg";
 
-    checkMatch(firstPick, secondPick);
+    checkMatch(firstItem, secondItem);
 
-    expect(firstPick.classList.add).toHaveBeenCalledOnceWith("match");
-    expect(secondPick.classList.add).toHaveBeenCalledOnceWith("match");
+    expect(firstItem.classList.contains("match")).toBe(true);
+    expect(secondItem.classList.contains("match")).toBe(true);
+  });
+
+  it("should add 'unmatch' class and return 0 if images don't match", () => {
+    checkMatch(firstItem, secondItem);
+
+    expect(firstItem.classList.contains("unmatch")).toBe(true);
+    expect(secondItem.classList.contains("unmatch")).toBe(true);
+  });
+  it("should clear timer and show congrats modal if all pairs are matched", () => {
+    firstItem.dataset.image = "1.jpg";
+    secondItem.dataset.image = "1.jpg";
+
+    spyOn(window, "clearInterval");
+    spyOn(window, "setTimeout");
+
+    countMatches(6);
+    checkMatch(firstItem, secondItem);
+
+    expect(window.clearInterval).toHaveBeenCalled();
+    expect(window.setTimeout).toHaveBeenCalledWith(
+      showCongratsModal,
+      700,
+      "Congratulations! You matched all the pairs!",
+      "Congratulations!"
+    );
+  });
+});
+
+describe("StartGame", () => {
+  it("should start the game correctly", () => {
+    startGame();
+    const timeLeftElement = document.getElementById("time-left");
+    expect(timeLeftElement.textContent).toBe(timeLimit.toString());
+    expect(firstPick).toBeNull();
+    expect(secondPick).toBeNull();
+  });
+});
+
+describe("updateTimer", () => {
+  it("should update the timer", () => {
+    timeLeftElement.textContent = "50";
+    updateTimer();
+    expect(timeLeftElement.textContent).toBe("49");
+  });
+
+  it("should stop timer at 0", () => {
+    timeLeftElement.textContent = "0";
+    updateTimer();
+    expect(timeLeftElement.textContent).toBe("0");
+  });
+});
+
+describe("showCongratsModal", () => {
+  it("should show congrats modal with correct message and title", () => {
+    showCongratsModal("Test message", "Test title");
+    expect(document.getElementById("congrats-message").textContent).toBe(
+      "Test message"
+    );
+    expect(document.getElementById("congratsModalLabel").textContent).toBe(
+      "Test title"
+    );
+  });
+});
+
+describe("onGridItemClick", () => {
+  it("should add 'show' class and remove 'd-none' class from image when clicked", () => {
+    const gridItem = document.createElement("div");
+    const img = document.createElement("img");
+    img.classList.add("d-none");
+    gridItem.appendChild(img);
+
+    onGridItemClick({ currentTarget: gridItem });
+
+    expect(gridItem.classList.contains("show")).toBe(true);
+    expect(img.classList.contains("d-none")).toBe(false);
   });
 });

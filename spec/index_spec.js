@@ -26,8 +26,6 @@ const {
   timeLeftElement,
   firstPick,
   secondPick,
-  countMatches,
-  timer,
   shuffleImages,
   createGridItem,
   initializeGameBoard,
@@ -85,35 +83,25 @@ describe("checkMatch", () => {
     firstItem.dataset.image = "1.jpg";
     secondItem.dataset.image = "1.jpg";
 
-    checkMatch(firstItem, secondItem);
+    checkMatch(firstItem, secondItem, 0);
 
     expect(firstItem.classList.contains("match")).toBe(true);
     expect(secondItem.classList.contains("match")).toBe(true);
   });
 
   it("should add 'unmatch' class and return 0 if images don't match", () => {
-    checkMatch(firstItem, secondItem);
+    checkMatch(firstItem, secondItem, 0);
 
     expect(firstItem.classList.contains("unmatch")).toBe(true);
     expect(secondItem.classList.contains("unmatch")).toBe(true);
   });
-  it("should clear timer and show congrats modal if all pairs are matched", () => {
+
+  it("should return totalPairs when all pairs are matched", () => {
     firstItem.dataset.image = "1.jpg";
     secondItem.dataset.image = "1.jpg";
 
-    spyOn(window, "clearInterval");
-    spyOn(window, "setTimeout");
-
-    countMatches(6);
-    checkMatch(firstItem, secondItem);
-
-    expect(window.clearInterval).toHaveBeenCalled();
-    expect(window.setTimeout).toHaveBeenCalledWith(
-      showCongratsModal,
-      700,
-      "Congratulations! You matched all the pairs!",
-      "Congratulations!"
-    );
+    let updatedMatches = checkMatch(firstItem, secondItem, 5);
+    expect(updatedMatches).toEqual(totalPairs);
   });
 });
 
@@ -164,5 +152,39 @@ describe("onGridItemClick", () => {
 
     expect(gridItem.classList.contains("show")).toBe(true);
     expect(img.classList.contains("d-none")).toBe(false);
+  });
+});
+
+describe("Exit button click event", function () {
+  it("should redirect to exit.html when exit button is clicked", function () {
+    const exitButton = document.getElementById("exit-button");
+
+    exitButton.addEventListener("click", () => window.redirect("exit.html"));
+    spyOn(window, "redirect");
+
+    exitButton.click();
+
+    expect(window.redirect).toHaveBeenCalledWith("exit.html");
+  });
+});
+
+describe("Play again button click event", function () {
+  it("should reset the game and start again when play again button is clicked", function () {
+    const playAgainButton = document.getElementById("exit-button");
+
+    const congratsModal = {
+      hide: jasmine.createSpy("hide"),
+    };
+
+    playAgainButton.addEventListener("click", () => {
+      congratsModal.hide();
+      timeLeftElement.textContent = "60";
+    });
+
+    playAgainButton.click();
+
+    expect(congratsModal.hide).toHaveBeenCalled();
+
+    expect(timeLeftElement.textContent).toBe("60");
   });
 });

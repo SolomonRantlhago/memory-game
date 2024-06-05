@@ -7,10 +7,6 @@ let secondPick = null;
 let matches = 0;
 let timer;
 
-function countMatches(matches) {
-  return matches;
-}
-
 function shuffleImages(images) {
   return images.concat(images).sort(() => 0.5 - Math.random());
 }
@@ -61,12 +57,13 @@ function onGridItemClick(event) {
     }, 700);
   }
 }
-function countMatches(matches) {
-  return matches;
-}
 
-function checkMatch(first, second) {
-  let updatedMatches = countMatches(matches);
+window.redirect = function (destination) {
+  window.location.href = destination;
+};
+
+function checkMatch(first, second, numMatches = matches) {
+  let updatedMatches = numMatches;
   if (first.dataset.image === second.dataset.image) {
     first.classList.add("match");
     second.classList.add("match");
@@ -150,8 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
     startGame();
   });
 
-  document.getElementById("exit-button").addEventListener("click", () => {
-    window.location.href = "exit.html";
+  document.getElementById("exit-button").addEventListener("click", function () {
+    window.redirect("exit.html");
   });
 
   const startModal = new bootstrap.Modal(
@@ -172,8 +169,6 @@ module.exports = {
   timeLeftElement,
   firstPick,
   secondPick,
-  countMatches,
-  timer,
   shuffleImages,
   createGridItem,
   initializeGameBoard,

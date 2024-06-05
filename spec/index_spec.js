@@ -170,7 +170,7 @@ describe("Exit button click event", function () {
 
 describe("Play again button click event", function () {
   it("should reset the game and start again when play again button is clicked", function () {
-    const playAgainButton = document.getElementById("exit-button");
+    const playAgainButton = document.getElementById("play-again-button");
 
     const congratsModal = {
       hide: jasmine.createSpy("hide"),

@@ -36,11 +36,6 @@
   border: 5px solid green;
 }
 
-.unmatch {
+.un-match {
   border: 5px solid red;
-}
-
-#timer {
-  font-size: 1.5em;
-  font-weight: bold;
 }

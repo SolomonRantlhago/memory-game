@@ -1,11 +1,10 @@
-const uniqueImages = ["1.jpg", "2.jpg", "3.jpg", "4.jpg", "5.jpg", "6.jpg"];
-const totalPairs = uniqueImages.length;
-const timeLimit = 60;
-const timeLeftElement = document.getElementById("time-left");
-let firstPick = null;
-let secondPick = null;
-let matches = 0;
-let timer;
+const {
+  gameState,
+  classNames,
+  messages,
+  elementIds,
+  urls,
+} = require("./helper_objects");
 
 function shuffleImages(images) {
   return images.concat(images).sort(() => 0.5 - Math.random());
@@ -13,17 +12,17 @@ function shuffleImages(images) {
 
 function createGridItem(image, index) {
   const col = document.createElement("div");
-  col.classList.add("col-6", "col-md-4", "col-lg-3", "mb-3");
+  col.className = classNames.column;
 
   const gridItem = document.createElement("div");
-  gridItem.classList.add("grid-item", "text-center");
+  gridItem.className = classNames.gridItem;
   gridItem.dataset.image = image;
   gridItem.addEventListener("click", onGridItemClick);
 
   const img = document.createElement("img");
   img.src = `./images/${image}`;
   img.alt = `Image ${index + 1}`;
-  img.classList.add("img-fluid", "d-none");
+  img.className = classNames.img;
 
   gridItem.appendChild(img);
   col.appendChild(gridItem);
@@ -31,9 +30,9 @@ function createGridItem(image, index) {
 }
 
 function initializeGameBoard() {
-  const gameBoard = document.getElementById("game-board");
+  const gameBoard = document.getElementById(elementIds.gameBoardId);
   gameBoard.innerHTML = "";
-  const images = shuffleImages(uniqueImages);
+  const images = shuffleImages(gameState.uniqueImages);
   images.forEach((image, index) => {
     gameBoard.appendChild(createGridItem(image, index));
   });
@@ -41,19 +40,19 @@ function initializeGameBoard() {
 
 function onGridItemClick(event) {
   const gridItem = event.currentTarget;
-  if (gridItem.classList.contains("show") || secondPick) {
+  if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
     return;
   }
 
-  gridItem.classList.add("show");
-  gridItem.querySelector("img").classList.remove("d-none");
+  gridItem.classList.add(classNames.show);
+  gridItem.querySelector("img").classList.remove(classNames.dNoneClass);
 
-  if (!firstPick) {
-    firstPick = gridItem;
+  if (!gameState.firstPick) {
+    gameState.firstPick = gridItem;
   } else {
-    secondPick = gridItem;
+    gameState.secondPick = gridItem;
     setTimeout(() => {
-      checkMatch(firstPick, secondPick);
+      checkMatch({ first: gameState.firstPick, second: gameState.secondPick });
     }, 700);
   }
 }
@@ -62,97 +61,87 @@ window.redirect = function (destination) {
   window.location.href = destination;
 };
 
-function checkMatch(first, second, numMatches = matches) {
-  let updatedMatches = numMatches;
+function checkMatch({ first, second, matches = gameState.matches }) {
+  let updatedMatches = matches;
   if (first.dataset.image === second.dataset.image) {
-    first.classList.add("match");
-    second.classList.add("match");
+    first.classList.add(classNames.match);
+    second.classList.add(classNames.match);
     updatedMatches += 1;
-    firstPick = null;
-    secondPick = null;
-    if (updatedMatches === totalPairs) {
-      clearInterval(timer);
+    if (updatedMatches === gameState.uniqueImages.length) {
       setTimeout(
-        showCongratsModal,
-        700,
-        "Congratulations! You matched all the pairs!",
-        "Congratulations!"
+        () =>
+          showCongratsModal({
+            message: messages.congratsMessage,
+            title: messages.congratsTitle,
+          }),
+        700
       );
     }
   } else {
-    first.classList.add("unmatch");
-    second.classList.add("unmatch");
+    first.classList.add(classNames.unMatch);
+    second.classList.add(classNames.unMatch);
     setTimeout(() => {
-      first.classList.remove("show", "unmatch");
-      second.classList.remove("show", "unmatch");
-      first.querySelector("img").classList.add("d-none");
-      second.querySelector("img").classList.add("d-none");
-      firstPick = null;
-      secondPick = null;
+      first.classList.remove(classNames.show, classNames.unMatch);
+      second.classList.remove(classNames.show, classNames.unMatch);
+      first.querySelector("img").classList.add();
+      second.querySelector("img").classList.add(classNames.dNoneClass);
     }, 700);
   }
-  matches = updatedMatches;
+  gameState.firstPick = null;
+  gameState.secondPick = null;
+  gameState.matches = updatedMatches;
   return updatedMatches;
 }
 
 function startGame() {
-  matches = 0;
-  firstPick = null;
-  secondPick = null;
-  timeLeftElement.innerHTML = timeLimit;
-  timer = setInterval(updateTimer, 700);
+  gameState.matches = 0;
+  gameState.firstPick = null;
+  gameState.secondPick = null;
 }
 
-function updateTimer() {
-  let currentTime = parseInt(timeLeftElement.textContent, 10);
-  currentTime -= 1;
-  timeLeftElement.textContent = Math.max(0, currentTime);
-
-  if (currentTime <= 0) {
-    clearInterval(timer);
-    showCongratsModal("Time's up! Try again.", "Time's Up!");
-  }
-}
-
-function showCongratsModal(message, title) {
+function showCongratsModal({ message, title }) {
   const congratsModal = new bootstrap.Modal(
-    document.getElementById("congratsModal"),
+    document.getElementById(elementIds.congratsModalId),
     {
       backdrop: "static",
       keyboard: false,
     }
   );
-  document.getElementById("congrats-message").textContent = message;
-  document.getElementById("congratsModalLabel").textContent = title;
+  document.getElementById(elementIds.congratsMessageId).textContent = message;
+  document.getElementById(elementIds.congratsModalLabelId).textContent = title;
   congratsModal.show();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("start-button").addEventListener("click", () => {
-    const startModal = bootstrap.Modal.getInstance(
-      document.getElementById("startModal")
-    );
-    startModal.hide();
-    timeLeftElement.textContent = timeLimit;
-    startGame();
-  });
+  document
+    .getElementById(elementIds.startButtonId)
+    .addEventListener("click", () => {
+      const startModal = bootstrap.Modal.getInstance(
+        document.getElementById(elementIds.startModalId)
+      );
+      startModal.hide();
+      startGame();
+    });
 
-  document.getElementById("play-again-button").addEventListener("click", () => {
-    const congratsModal = bootstrap.Modal.getInstance(
-      document.getElementById("congratsModal")
-    );
-    congratsModal.hide();
-    timeLeftElement.textContent = timeLimit;
-    initializeGameBoard();
-    startGame();
-  });
+  document
+    .getElementById(elementIds.playAgainButtonId)
+    .addEventListener("click", () => {
+      const congratsModal = bootstrap.Modal.getInstance(
+        document.getElementById(elementIds.congratsModalId)
+      );
+      congratsModal.hide();
+      initializeGameBoard();
+      startGame();
+    });
 
-  document.getElementById("exit-button").addEventListener("click", function () {
-    window.redirect("exit.html");
-  });
+  document
+    .getElementById(elementIds.exitButtonId)
+    .addEventListener("click", function () {
+      window.redirect(urls.exit);
+    });
 
   const startModal = new bootstrap.Modal(
-    document.getElementById("startModal"),
+    document.getElementById(elementIds.startModalId),
     {
       backdrop: "static",
       keyboard: false,
@@ -163,18 +152,11 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 module.exports = {
-  uniqueImages,
-  totalPairs,
-  timeLimit,
-  timeLeftElement,
-  firstPick,
-  secondPick,
   shuffleImages,
   createGridItem,
   initializeGameBoard,
   onGridItemClick,
   checkMatch,
   startGame,
-  updateTimer,
   showCongratsModal,
 };

@@ -1,4 +1,4 @@
-const { window, document } = require("./setup_dom");
+const { document } = require("./setup_dom");
 
 const {
   shuffleImages,
@@ -17,12 +17,6 @@ const {
   elementIds,
   urls,
 } = require("../src/helper_objects");
-
-global.bootstrap = {
-  Modal: jasmine.createSpy().and.returnValue({
-    show: jasmine.createSpy(),
-  }),
-};
 
 describe("shuffleImages", () => {
   it("should shuffle images correctly", () => {
@@ -56,6 +50,11 @@ describe("checkMatch", () => {
   let firstItem, secondItem;
 
   beforeEach(() => {
+    global.bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: jasmine.createSpy(),
+      }),
+    };
     firstItem = document.createElement("div");
     firstItem.dataset.image = "1.jpg";
     secondItem = document.createElement("div");
@@ -95,6 +94,7 @@ describe("checkMatch", () => {
     expect(
       document.getElementById(elementIds.congratsMessageId).textContent
     ).toBe(messages.congratsMessage);
+
     jasmine.clock().uninstall();
   });
 });
@@ -109,6 +109,13 @@ describe("startGame", () => {
 });
 
 describe("showCongratsModal", () => {
+  beforeEach(() => {
+    global.bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: jasmine.createSpy(),
+      }),
+    };
+  });
   it("should show congrats modal with correct message and title", () => {
     const message = "Test message";
     const title = "Test title";
@@ -138,38 +145,94 @@ describe("onGridItemClick", () => {
 });
 
 describe("Exit button click event", function () {
-  it("should redirect to exit.html when exit button is clicked", function () {
-    const exitButton = document.getElementById(elementIds.exitButtonId);
-    exitButton.addEventListener("click", () => window.redirect(urls.exit));
-    spyOn(window, "redirect");
+  let firstItem, secondItem, bootstrapModalShowSpy, exitButton;
 
+  beforeEach(() => {
+    firstItem = document.createElement("div");
+    firstItem.dataset.image = "1.jpg";
+    secondItem = document.createElement("div");
+    secondItem.dataset.image = "2.jpg";
+
+    exitButton = document.getElementById(elementIds.exitButtonId);
+    bootstrapModalShowSpy = jasmine.createSpy("show").and.callFake(() => {
+      exitButton.addEventListener("click", () => {
+        window.redirect(urls.exit);
+      });
+    });
+
+    global.bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: bootstrapModalShowSpy,
+      }),
+    };
+
+    spyOn(window, "redirect");
+  });
+
+  it("should redirect to exit.html when exit button is clicked", function () {
+    jasmine.clock().install();
+    firstItem.dataset.image = "1.jpg";
+    secondItem.dataset.image = "1.jpg";
+
+    checkMatch({
+      first: firstItem,
+      second: secondItem,
+      matches: gameState.uniqueImages.length - 1,
+    });
+
+    jasmine.clock().tick(700);
+
+    expect(bootstrapModalShowSpy).toHaveBeenCalled();
     exitButton.click();
 
-    expect(window.redirect).toHaveBeenCalledOnceWith(urls.exit);
+    expect(window.redirect).toHaveBeenCalledWith(urls.exit);
+
+    jasmine.clock().uninstall();
   });
 });
 
 describe("Play again button click event", function () {
-  it("should reset the game and start again when play again button is clicked", function () {
-    const playAgainButton = document.getElementById(
-      elementIds.playAgainButtonId
-    );
+  let firstItem, secondItem, bootstrapModalShowSpy, playAgainButton;
 
-    const congratsModal = {
-      hide: jasmine.createSpy("hide"),
-    };
-    playAgainButton.addEventListener("click", () => {
-      congratsModal.hide();
-      initializeGameBoard();
-      startGame();
+  beforeEach(() => {
+    firstItem = document.createElement("div");
+    firstItem.dataset.image = "1.jpg";
+    secondItem = document.createElement("div");
+    secondItem.dataset.image = "2.jpg";
+
+    playAgainButton = document.getElementById(elementIds.playAgainButtonId);
+    bootstrapModalShowSpy = jasmine.createSpy("show").and.callFake(() => {
+      playAgainButton.addEventListener("click", () => {
+        initializeGameBoard();
+        startGame();
+      });
     });
 
-    playAgainButton.click();
+    global.bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: bootstrapModalShowSpy,
+      }),
+    };
+  });
+  it("should reset the game and start again when play again button is clicked", function () {
+    jasmine.clock().install();
+    firstItem.dataset.image = "1.jpg";
+    secondItem.dataset.image = "1.jpg";
 
-    expect(congratsModal.hide).toHaveBeenCalled();
+    checkMatch({
+      first: firstItem,
+      second: secondItem,
+      matches: gameState.uniqueImages.length - 1,
+    });
+
+    jasmine.clock().tick(700);
+    playAgainButton.click();
+    expect(bootstrapModalShowSpy).toHaveBeenCalled();
 
     expect(gameState.matches).toBe(0);
     expect(gameState.firstPick).toBeNull();
     expect(gameState.secondPick).toBeNull();
+
+    jasmine.clock().uninstall();
   });
 });

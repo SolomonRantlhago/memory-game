@@ -83,7 +83,7 @@ function checkMatch({ first, second, matches = gameState.matches }) {
     setTimeout(() => {
       first.classList.remove(classNames.show, classNames.unMatch);
       second.classList.remove(classNames.show, classNames.unMatch);
-      first.querySelector("img").classList.add();
+      first.querySelector("img").classList.add(classNames.dNoneClass);
       second.querySelector("img").classList.add(classNames.dNoneClass);
     }, 700);
   }
@@ -112,43 +112,47 @@ function showCongratsModal({ message, title }) {
   congratsModal.show();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  document
-    .getElementById(elementIds.startButtonId)
-    .addEventListener("click", () => {
-      const startModal = bootstrap.Modal.getInstance(
-        document.getElementById(elementIds.startModalId)
-      );
+function setupEventListeners() {
+  const getElement = (id) => document.getElementById(id);
+  const getModalInstance = (id) => bootstrap.Modal.getInstance(getElement(id));
+
+  const startButton = () => {
+    getElement(elementIds.startButtonId).addEventListener("click", () => {
+      const startModal = getModalInstance(elementIds.startModalId);
       startModal.hide();
       startGame();
     });
+  };
 
-  document
-    .getElementById(elementIds.playAgainButtonId)
-    .addEventListener("click", () => {
-      const congratsModal = bootstrap.Modal.getInstance(
-        document.getElementById(elementIds.congratsModalId)
-      );
+  const playAgainButton = () => {
+    getElement(elementIds.playAgainButtonId).addEventListener("click", () => {
+      const congratsModal = getModalInstance(elementIds.congratsModalId);
       congratsModal.hide();
       initializeGameBoard();
       startGame();
     });
+  };
 
-  document
-    .getElementById(elementIds.exitButtonId)
-    .addEventListener("click", function () {
+  const exitButton = () => {
+    getElement(elementIds.exitButtonId).addEventListener("click", () => {
       window.redirect(urls.exit);
     });
+  };
 
-  const startModal = new bootstrap.Modal(
-    document.getElementById(elementIds.startModalId),
-    {
-      backdrop: "static",
-      keyboard: false,
-    }
-  );
+  startButton();
+  playAgainButton();
+  exitButton();
+
+  const startModal = new bootstrap.Modal(getElement(elementIds.startModalId), {
+    backdrop: "static",
+    keyboard: false,
+  });
+
   initializeGameBoard();
   startModal.show();
+}
+document.addEventListener("DOMContentLoaded", () => {
+  setupEventListeners();
 });
 
 module.exports = {
@@ -158,5 +162,4 @@ module.exports = {
   onGridItemClick,
   checkMatch,
   startGame,
-  showCongratsModal,
 };

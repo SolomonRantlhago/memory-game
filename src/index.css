@@ -39,3 +39,7 @@
 .un-match {
   border: 5px solid red;
 }
+
+.no-click {
+  pointer-events: none;
+}

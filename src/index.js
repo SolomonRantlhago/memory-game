@@ -26,7 +26,10 @@ function createGridItem(image, index) {
 
   gridItem.appendChild(img);
   col.appendChild(gridItem);
-  return col;
+  return {
+    col,
+    gridItem,
+  };
 }
 
 function initializeGameBoard() {
@@ -34,10 +37,10 @@ function initializeGameBoard() {
   gameBoard.innerHTML = "";
   const images = shuffleImages(gameState.uniqueImages);
   images.forEach((image, index) => {
-    gameBoard.appendChild(createGridItem(image, index));
+    const { col } = createGridItem(image, index);
+    gameBoard.appendChild(col);
   });
 }
-
 function onGridItemClick(event) {
   const gridItem = event.currentTarget;
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {

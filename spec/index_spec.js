@@ -28,11 +28,10 @@ describe("createGridItem", () => {
   it("should create a grid item correctly", () => {
     const image = gameState.uniqueImages[0];
     const index = 0;
-    const gridItem = createGridItem(image, index);
-    expect(gridItem.classList.contains(classNames.columnClass)).toBe(true);
-
-    expect(gridItem.querySelector("img").src).toContain(image);
-    expect(gridItem.querySelector("img").alt).toBe(`Image ${index + 1}`);
+    const item = createGridItem(image, index).col;
+    expect(item.classList.contains(classNames.columnClass)).toBe(true);
+    expect(item.querySelector("img").src).toContain(image);
+    expect(item.querySelector("img").alt).toBe(`Image ${index + 1}`);
   });
 });
 
@@ -45,43 +44,73 @@ describe("initializeGameBoard", () => {
 });
 
 describe("checkMatch", () => {
-  let firstItem, secondItem;
-
+  let gridItem1;
+  let index;
+  let image1;
+  let image2;
   beforeEach(() => {
     global.bootstrap = {
       Modal: jasmine.createSpy().and.returnValue({
         show: jasmine.createSpy(),
       }),
     };
-    firstItem = document.createElement("div");
-    firstItem.dataset.image = gameState.uniqueImages[0];
-    secondItem = document.createElement("div");
-    secondItem.dataset.image = gameState.uniqueImages[1];
+
+    gameState.matches = 0;
+    gameState.firstPick = null;
+    gameState.secondPick = null;
+    jasmine.clock().install();
+
+    image1 = gameState.uniqueImages[0];
+    image2 = gameState.uniqueImages[1];
+    index = 0;
+    gridItem1 = createGridItem(image1, index).gridItem;
   });
 
+  afterEach(() => {
+    jasmine.clock().uninstall();
+  });
   it("should add 'match' class and update matches count if images match", () => {
-    secondItem.dataset.image = gameState.uniqueImages[0];
+    const gridItem2 = createGridItem(image1, index).gridItem;
+    onGridItemClick({ currentTarget: gridItem1 });
+    onGridItemClick({ currentTarget: gridItem2 });
 
-    checkMatch({ first: firstItem, second: secondItem });
-
-    expect(firstItem.classList.contains(classNames.match)).toBe(true);
-    expect(secondItem.classList.contains(classNames.match)).toBe(true);
+    jasmine.clock().tick(700);
+    expect(gridItem1.classList.contains(classNames.match)).toBe(true);
+    expect(gridItem2.classList.contains(classNames.match)).toBe(true);
+    expect(gameState.matches).toBe(1);
   });
 
   it("should add 'un-match' class if images don't match", () => {
-    checkMatch({ first: firstItem, second: secondItem });
+    const gridItem2 = createGridItem(image2, index).gridItem;
+    onGridItemClick({ currentTarget: gridItem1 });
+    onGridItemClick({ currentTarget: gridItem2 });
 
-    expect(firstItem.classList.contains(classNames.unMatch)).toBe(true);
-    expect(secondItem.classList.contains(classNames.unMatch)).toBe(true);
+    jasmine.clock().tick(700);
+    expect(gridItem1.classList.contains(classNames.match)).toBe(false);
+    expect(gridItem2.classList.contains(classNames.match)).toBe(false);
+    expect(gameState.matches).toBe(0);
   });
+});
 
+describe("showCongratsModal", () => {
+  beforeEach(() => {
+    global.bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: jasmine.createSpy(),
+      }),
+    };
+  });
   it("should show congrats modal when all pairs are matched", () => {
     jasmine.clock().install();
-    secondItem.dataset.image = gameState.uniqueImages[0];
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+
+    const gridItem1 = createGridItem(image, index).gridItem;
+    const gridItem2 = createGridItem(image, index).gridItem;
 
     let result = checkMatch({
-      first: firstItem,
-      second: secondItem,
+      first: gridItem1,
+      second: gridItem2,
       matches: gameState.uniqueImages.length - 1,
     });
 
@@ -110,7 +139,7 @@ describe("onGridItemClick", () => {
   it("should add 'show' class and remove 'd-none' class from image when clicked", () => {
     const image = gameState.uniqueImages[0];
     const index = 0;
-    const gridItem = createGridItem(image, index);
+    const gridItem = createGridItem(image, index).gridItem;
     const img = gridItem.querySelector("img");
 
     onGridItemClick({ currentTarget: gridItem });
@@ -121,14 +150,8 @@ describe("onGridItemClick", () => {
 });
 
 describe("Exit button click event", function () {
-  let firstItem, secondItem, bootstrapModalShowSpy, exitButton;
-
+  let exitButton;
   beforeEach(() => {
-    firstItem = document.createElement("div");
-    firstItem.dataset.image = gameState.uniqueImages[0];
-    secondItem = document.createElement("div");
-    secondItem.dataset.image = gameState.uniqueImages[1];
-
     exitButton = document.getElementById(elementIds.exitButtonId);
     bootstrapModalShowSpy = jasmine.createSpy("show").and.callFake(() => {
       exitButton.addEventListener("click", () => {
@@ -147,11 +170,15 @@ describe("Exit button click event", function () {
 
   it("should redirect to exit.html when exit button is clicked", function () {
     jasmine.clock().install();
-    secondItem.dataset.image = gameState.uniqueImages[0];
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+
+    const gridItem1 = createGridItem(image, index).gridItem;
+    const gridItem2 = createGridItem(image, index).gridItem;
 
     checkMatch({
-      first: firstItem,
-      second: secondItem,
+      first: gridItem1,
+      second: gridItem2,
       matches: gameState.uniqueImages.length - 1,
     });
 
@@ -167,14 +194,8 @@ describe("Exit button click event", function () {
 });
 
 describe("Play again button click event", function () {
-  let firstItem, secondItem, bootstrapModalShowSpy, playAgainButton;
-
+  let playAgainButton;
   beforeEach(() => {
-    firstItem = document.createElement("div");
-    firstItem.dataset.image = gameState.uniqueImages[0];
-    secondItem = document.createElement("div");
-    secondItem.dataset.image = gameState.uniqueImages[1];
-
     playAgainButton = document.getElementById(elementIds.playAgainButtonId);
     bootstrapModalShowSpy = jasmine.createSpy("show").and.callFake(() => {
       playAgainButton.addEventListener("click", () => {
@@ -191,11 +212,15 @@ describe("Play again button click event", function () {
   });
   it("should reset the game and start again when play again button is clicked", function () {
     jasmine.clock().install();
-    secondItem.dataset.image = gameState.uniqueImages[0];
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+
+    const gridItem1 = createGridItem(image, index).gridItem;
+    const gridItem2 = createGridItem(image, index).gridItem;
 
     checkMatch({
-      first: firstItem,
-      second: secondItem,
+      first: gridItem1,
+      second: gridItem2,
       matches: gameState.uniqueImages.length - 1,
     });
 

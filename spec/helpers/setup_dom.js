@@ -11,7 +11,5 @@ const dom = new JSDOM(indexContent, {
   resources: "usable",
 });
 
-const { window } = dom;
-const { document } = window;
-global.window = window;
-global.document = document;
+global.window = dom.window;
+global.document = window.document;

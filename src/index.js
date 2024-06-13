@@ -46,7 +46,6 @@ function onGridItemClick(event) {
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
     return;
   }
-
   gridItem.classList.add(classNames.show);
   gridItem.querySelector("img").classList.remove(classNames.dNoneClass);
 

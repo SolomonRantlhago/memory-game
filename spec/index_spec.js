@@ -1,11 +1,4 @@
-const {
-  shuffleImages,
-  createGridItem,
-  initializeGameBoard,
-  checkMatch,
-  startGame,
-} = require("../src/index");
-
+const { initializeGameBoard, startGame } = require("../src/index");
 const {
   gameState,
   classNames,
@@ -14,220 +7,212 @@ const {
   urls,
 } = require("../src/helper_objects");
 
-describe("shuffleImages", () => {
-  it("should shuffle images correctly", () => {
-    const images = gameState.uniqueImages;
-    const shuffledImages = shuffleImages(images);
-    expect(shuffledImages.length).toBe(images.length * 2);
-    expect(shuffledImages).not.toEqual(images);
-  });
-});
+function selectPairs(cards) {
+  const usedIndices = new Set();
 
-describe("createGridItem", () => {
-  it("should create a grid item correctly", () => {
-    const image = gameState.uniqueImages[0];
-    const index = 0;
-    const item = createGridItem(image, index).col;
-    expect(item.classList.contains(classNames.columnClass)).toBe(true);
-    expect(item.querySelector("img").src).toContain(image);
-    expect(item.querySelector("img").alt).toBe(`Image ${index + 1}`);
-  });
-});
+  for (let i = 0; i < cards.length; i++) {
+    if (usedIndices.has(i)) continue;
 
-describe("initializeGameBoard", () => {
-  it("should initialize the game board correctly", () => {
-    const gameBoard = document.getElementById(elementIds.gameBoardId);
-    initializeGameBoard();
-    expect(gameBoard.children.length).toBe(gameState.uniqueImages.length * 2);
-  });
-});
+    const firstCard = cards[i];
+    const secondCard = Array.from(cards).find((item, index) => {
+      return (
+        index !== i &&
+        item.querySelector("img").src === firstCard.querySelector("img").src
+      );
+    });
 
-describe("checkMatch", () => {
-  let gridItem1;
-  let index;
-  let image1;
-  let image2;
+    const secondCardIndex = Array.from(cards).indexOf(secondCard);
+
+    usedIndices.add(i);
+    usedIndices.add(secondCardIndex);
+
+    firstCard.click();
+    secondCard.click();
+
+    jasmine.clock().tick(700);
+  }
+}
+
+describe("Memory Game Tests", () => {
   beforeEach(() => {
     global.bootstrap = {
       Modal: jasmine.createSpy().and.returnValue({
         show: jasmine.createSpy(),
       }),
     };
-
-    startGame();
     jasmine.clock().install();
-
-    image1 = gameState.uniqueImages[0];
-    image2 = gameState.uniqueImages[1];
-    index = 0;
-    gridItem1 = createGridItem(image1, index).gridItem;
   });
 
   afterEach(() => {
     jasmine.clock().uninstall();
   });
-  it("should add 'match' class and update matches count if images match", () => {
-    const gridItem2 = createGridItem(image1, index).gridItem;
-    gridItem1.click();
-    gridItem2.click();
 
-    jasmine.clock().tick(700);
-    expect(gridItem1.classList.contains(classNames.match)).toBe(true);
-    expect(gridItem2.classList.contains(classNames.match)).toBe(true);
-    expect(gameState.matches).toBe(1);
-  });
-
-  it("should add 'un-match' class if images don't match", () => {
-    const gridItem2 = createGridItem(image2, index).gridItem;
-
-    gridItem1.click();
-    gridItem2.click();
-
-    jasmine.clock().tick(700);
-    expect(gridItem1.classList.contains(classNames.match)).toBe(false);
-    expect(gridItem2.classList.contains(classNames.match)).toBe(false);
-    expect(gameState.matches).toBe(0);
-  });
-});
-
-describe("showCongratsModal", () => {
-  beforeEach(() => {
-    global.bootstrap = {
-      Modal: jasmine.createSpy().and.returnValue({
-        show: jasmine.createSpy(),
-      }),
-    };
-  });
-  it("should show congrats modal when all pairs are matched", () => {
-    jasmine.clock().install();
-    const image = gameState.uniqueImages[0];
-    const index = 0;
-
-    const gridItem1 = createGridItem(image, index).gridItem;
-    const gridItem2 = createGridItem(image, index).gridItem;
-
-    let result = checkMatch({
-      first: gridItem1,
-      second: gridItem2,
-      matches: gameState.uniqueImages.length - 1,
-    });
-
-    expect(result).toBe(gameState.uniqueImages.length);
-    jasmine.clock().tick(700);
-    expect(
-      document.getElementById(elementIds.congratsMessageId).textContent
-    ).toBe(messages.congratsMessage);
-    expect(
-      document.getElementById(elementIds.congratsModalLabelId).textContent
-    ).toBe(messages.congratsTitle);
-    jasmine.clock().uninstall();
-  });
-});
-
-describe("startGame", () => {
-  it("should reset the game state correctly", () => {
+  const setupGame = () => {
+    initializeGameBoard();
     startGame();
-    expect(gameState.matches).toBe(0);
-    expect(gameState.firstPick).toBeNull();
-    expect(gameState.secondPick).toBeNull();
-  });
-});
+  };
 
-describe("onGridItemClick", () => {
-  it("should add 'show' class and remove 'd-none' class from image when clicked", () => {
-    const image = gameState.uniqueImages[0];
-    const index = 0;
-    const gridItem = createGridItem(image, index).gridItem;
-    const img = gridItem.querySelector("img");
+  describe("createGridItem", () => {
+    it("should initialize the game board with the correct number of grid items and image pairs", () => {
+      initializeGameBoard();
 
-    gridItem.click();
+      const gridItems = document.querySelectorAll(".grid-item");
+      const images = gameState.uniqueImages;
 
-    expect(gridItem.classList.contains(classNames.show)).toBe(true);
-    expect(img.classList.contains(classNames.dNoneClass)).toBe(false);
-  });
-});
+      expect(gridItems.length).toBe(images.length * 2);
 
-describe("Exit button click event", function () {
-  let exitButton;
-  beforeEach(() => {
-    exitButton = document.getElementById(elementIds.exitButtonId);
-    bootstrapModalShowSpy = jasmine.createSpy("show").and.callFake(() => {
-      exitButton.addEventListener("click", () => {
-        window.redirect(urls.exit);
+      const imageCount = {};
+
+      gridItems.forEach((item) => {
+        const img = item.querySelector("img");
+        expect(img).not.toBeNull();
+        const imageSrc = img.src.split("/").pop();
+        imageCount[imageSrc] = (imageCount[imageSrc] || 0) + 1;
+      });
+
+      images.forEach((image) => {
+        const imageSrc = image.split("/").pop();
+        expect(imageCount[imageSrc]).toBe(2);
       });
     });
-
-    global.bootstrap = {
-      Modal: jasmine.createSpy().and.returnValue({
-        show: bootstrapModalShowSpy,
-      }),
-    };
-
-    spyOn(window, "redirect");
   });
 
-  it("should redirect to exit.html when exit button is clicked", function () {
-    jasmine.clock().install();
-    const image = gameState.uniqueImages[0];
-    const index = 0;
+  describe("checkMatch", () => {
+    beforeEach(setupGame);
 
-    const gridItem1 = createGridItem(image, index).gridItem;
-    const gridItem2 = createGridItem(image, index).gridItem;
+    it("should add 'match' class and update matches count if images match", () => {
+      const gridItems = document.querySelectorAll(".grid-item");
 
-    checkMatch({
-      first: gridItem1,
-      second: gridItem2,
-      matches: gameState.uniqueImages.length - 1,
+      const firstCard = gridItems[0];
+      const secondCard = Array.from(gridItems).find(
+        (item, index) =>
+          index !== 0 &&
+          item.querySelector("img").src === firstCard.querySelector("img").src
+      );
+
+      firstCard.click();
+      secondCard.click();
+
+      jasmine.clock().tick(700);
+
+      expect(firstCard.classList.contains(classNames.match)).toBe(true);
+      expect(secondCard.classList.contains(classNames.match)).toBe(true);
+      expect(gameState.matches).toBe(1);
     });
 
-    jasmine.clock().tick(700);
+    it("should add 'un-match' class if images don't match", () => {
+      const gridItems = document.querySelectorAll(".grid-item");
+      const firstCard = gridItems[0];
+      const secondCard = Array.from(gridItems).find(
+        (item, index) =>
+          index !== 0 &&
+          item.querySelector("img").src !== firstCard.querySelector("img").src
+      );
 
-    exitButton.click();
+      firstCard.click();
+      secondCard.click();
 
-    expect(window.redirect).toHaveBeenCalledWith(urls.exit);
+      jasmine.clock().tick(700);
 
-    jasmine.clock().uninstall();
+      expect(firstCard.classList.contains(classNames.match)).toBe(false);
+      expect(secondCard.classList.contains(classNames.match)).toBe(false);
+      expect(gameState.matches).toBe(0);
+    });
   });
-});
 
-describe("Play again button click event", function () {
-  let playAgainButton;
-  beforeEach(() => {
-    playAgainButton = document.getElementById(elementIds.playAgainButtonId);
-    bootstrapModalShowSpy = jasmine.createSpy("show").and.callFake(() => {
-      playAgainButton.addEventListener("click", () => {
-        initializeGameBoard();
-        startGame();
-      });
+  describe("showCongratsModal", () => {
+    beforeEach(setupGame);
+
+    it("should show congrats modal when all pairs are matched", () => {
+      const cards = document.querySelectorAll(".grid-item");
+
+      selectPairs(cards);
+
+      jasmine.clock().tick(700);
+      expect(
+        document.getElementById(elementIds.congratsMessageId).textContent
+      ).toBe(messages.congratsMessage);
+      expect(
+        document.getElementById(elementIds.congratsModalLabelId).textContent
+      ).toBe(messages.congratsTitle);
     });
-
-    global.bootstrap = {
-      Modal: jasmine.createSpy().and.returnValue({
-        show: bootstrapModalShowSpy,
-      }),
-    };
   });
-  it("should reset the game and start again when play again button is clicked", function () {
-    jasmine.clock().install();
-    const image = gameState.uniqueImages[0];
-    const index = 0;
 
-    const gridItem1 = createGridItem(image, index).gridItem;
-    const gridItem2 = createGridItem(image, index).gridItem;
+  describe("onGridItemClick", () => {
+    beforeEach(initializeGameBoard);
 
-    checkMatch({
-      first: gridItem1,
-      second: gridItem2,
-      matches: gameState.uniqueImages.length - 1,
+    it("should add 'show' class and remove 'd-none' class from image when clicked", () => {
+      const card = document.querySelector(".grid-item");
+      const img = card.querySelector("img");
+
+      card.click();
+
+      expect(card.classList.contains(classNames.show)).toBe(true);
+      expect(img.classList.contains(classNames.dNoneClass)).toBe(false);
+    });
+  });
+
+  describe("Exit button click event", () => {
+    let exitButton;
+
+    beforeEach(() => {
+      setupGame();
+      exitButton = document.getElementById(elementIds.exitButtonId);
+
+      global.bootstrap = {
+        Modal: jasmine.createSpy().and.returnValue({
+          show: jasmine.createSpy().and.callFake(() => {
+            exitButton.addEventListener("click", () => {
+              window.redirect(urls.exit);
+            });
+          }),
+        }),
+      };
+
+      spyOn(window, "redirect");
     });
 
-    jasmine.clock().tick(700);
-    playAgainButton.click();
+    it("should redirect to exit.html when exit button is clicked", () => {
+      const cards = document.querySelectorAll(".grid-item");
 
-    expect(gameState.matches).toBe(0);
-    expect(gameState.firstPick).toBeNull();
-    expect(gameState.secondPick).toBeNull();
+      selectPairs(cards);
 
-    jasmine.clock().uninstall();
+      jasmine.clock().tick(700);
+      exitButton.click();
+      expect(window.redirect).toHaveBeenCalledWith(urls.exit);
+    });
+  });
+
+  describe("Play again button click event", () => {
+    let playAgainButton;
+
+    beforeEach(() => {
+      setupGame();
+      playAgainButton = document.getElementById(elementIds.playAgainButtonId);
+
+      global.bootstrap = {
+        Modal: jasmine.createSpy().and.returnValue({
+          show: jasmine.createSpy().and.callFake(() => {
+            playAgainButton.addEventListener("click", () => {
+              initializeGameBoard();
+              startGame();
+            });
+          }),
+        }),
+      };
+    });
+
+    it("should reset the game and start again when play again button is clicked", () => {
+      const cards = document.querySelectorAll(".grid-item");
+
+      selectPairs(cards);
+
+      jasmine.clock().tick(700);
+      playAgainButton.click();
+
+      expect(gameState.matches).toBe(0);
+      expect(gameState.firstPick).toBeNull();
+      expect(gameState.secondPick).toBeNull();
+    });
   });
 });

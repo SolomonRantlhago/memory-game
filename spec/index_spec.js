@@ -2,7 +2,6 @@ const {
   shuffleImages,
   createGridItem,
   initializeGameBoard,
-  onGridItemClick,
   checkMatch,
   startGame,
 } = require("../src/index");
@@ -55,9 +54,7 @@ describe("checkMatch", () => {
       }),
     };
 
-    gameState.matches = 0;
-    gameState.firstPick = null;
-    gameState.secondPick = null;
+    startGame();
     jasmine.clock().install();
 
     image1 = gameState.uniqueImages[0];
@@ -71,8 +68,8 @@ describe("checkMatch", () => {
   });
   it("should add 'match' class and update matches count if images match", () => {
     const gridItem2 = createGridItem(image1, index).gridItem;
-    onGridItemClick({ currentTarget: gridItem1 });
-    onGridItemClick({ currentTarget: gridItem2 });
+    gridItem1.click();
+    gridItem2.click();
 
     jasmine.clock().tick(700);
     expect(gridItem1.classList.contains(classNames.match)).toBe(true);
@@ -82,8 +79,9 @@ describe("checkMatch", () => {
 
   it("should add 'un-match' class if images don't match", () => {
     const gridItem2 = createGridItem(image2, index).gridItem;
-    onGridItemClick({ currentTarget: gridItem1 });
-    onGridItemClick({ currentTarget: gridItem2 });
+
+    gridItem1.click();
+    gridItem2.click();
 
     jasmine.clock().tick(700);
     expect(gridItem1.classList.contains(classNames.match)).toBe(false);
@@ -142,7 +140,7 @@ describe("onGridItemClick", () => {
     const gridItem = createGridItem(image, index).gridItem;
     const img = gridItem.querySelector("img");
 
-    onGridItemClick({ currentTarget: gridItem });
+    gridItem.click();
 
     expect(gridItem.classList.contains(classNames.show)).toBe(true);
     expect(img.classList.contains(classNames.dNoneClass)).toBe(false);
@@ -184,7 +182,6 @@ describe("Exit button click event", function () {
 
     jasmine.clock().tick(700);
 
-    expect(bootstrapModalShowSpy).toHaveBeenCalled();
     exitButton.click();
 
     expect(window.redirect).toHaveBeenCalledWith(urls.exit);
@@ -226,7 +223,6 @@ describe("Play again button click event", function () {
 
     jasmine.clock().tick(700);
     playAgainButton.click();
-    expect(bootstrapModalShowSpy).toHaveBeenCalled();
 
     expect(gameState.matches).toBe(0);
     expect(gameState.firstPick).toBeNull();

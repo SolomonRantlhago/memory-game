@@ -162,7 +162,6 @@ module.exports = {
   shuffleImages,
   createGridItem,
   initializeGameBoard,
-  onGridItemClick,
   checkMatch,
   startGame,
 };

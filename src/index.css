@@ -1,0 +1,45 @@
+.custom-heading {
+  color: blue;
+  text-decoration: underline;
+}
+.grid-item {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  height: 110px;
+  width: 110px;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.grid-item img {
+  max-width: 100%;
+  max-height: 100%;
+  display: none;
+}
+
+.grid-item.show img {
+  display: block;
+}
+
+.bg-gray {
+  background-color: #ccc;
+}
+
+.match {
+  border: 5px solid green;
+}
+
+.un-match {
+  border: 5px solid red;
+}
+
+.no-click {
+  pointer-events: none;
+}

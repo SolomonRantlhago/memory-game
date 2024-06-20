@@ -32,15 +32,33 @@ function createGridItem(image, index) {
   };
 }
 
-function initializeGameBoard() {
+function initializeGameBoard(rows, columns) {
   const gameBoard = document.getElementById(elementIds.gameBoardId);
   gameBoard.innerHTML = "";
-  const images = shuffleImages(gameState.uniqueImages);
-  images.forEach((image, index) => {
-    const { col } = createGridItem(image, index);
-    gameBoard.appendChild(col);
-  });
+  const images = shuffleImages(gameState.uniqueImages).slice(
+    0,
+    (rows * columns) / 2
+  );
+
+  gameBoard.style.display = "grid";
+  gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+
+  let imageIndex = 0;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < columns; col++) {
+      const { col: gridItemCol } = createGridItem(
+        images[imageIndex],
+        imageIndex
+      );
+      gameBoard.appendChild(gridItemCol);
+      imageIndex++;
+    }
+    imageIndex = 0;
+  }
 }
+
 function onGridItemClick(event) {
   const gridItem = event.currentTarget;
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
@@ -95,10 +113,11 @@ function checkMatch({ first, second, matches = gameState.matches }) {
   return updatedMatches;
 }
 
-function startGame() {
+function startGame(rows, columns) {
   gameState.matches = 0;
   gameState.firstPick = null;
   gameState.secondPick = null;
+  initializeGameBoard(rows, columns);
 }
 
 function showCongratsModal({ message, title }) {
@@ -120,9 +139,27 @@ function setupEventListeners() {
 
   const startButton = () => {
     getElement(elementIds.startButtonId).addEventListener("click", () => {
-      const startModal = getModalInstance(elementIds.startModalId);
-      startModal.hide();
-      startGame();
+      const rows = parseInt(getElement("rowValue").value, 10);
+      const columns = parseInt(getElement("columnValue").value, 10);
+
+      if (!rows || !columns) {
+        getElement("error-message").textContent =
+          "Both row and column values are required.";
+        getElement("error-message").style.display = "block";
+      } else if (rows * columns > 12) {
+        getElement("error-message").textContent =
+          "The product of rows and columns should not exceed 12.";
+        getElement("error-message").style.display = "block";
+      } else if ((rows * columns) % 2 !== 0) {
+        getElement("error-message").textContent =
+          "The product of rows and columns should be an even number.";
+        getElement("error-message").style.display = "block";
+      } else {
+        getElement("error-message").style.display = "none";
+        const startModal = getModalInstance(elementIds.startModalId);
+        startModal.hide();
+        startGame(rows, columns);
+      }
     });
   };
 
@@ -150,7 +187,6 @@ function setupEventListeners() {
     keyboard: false,
   });
 
-  initializeGameBoard();
   startModal.show();
 }
 document.addEventListener("DOMContentLoaded", () => {

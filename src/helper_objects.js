@@ -3,6 +3,8 @@ const gameState = {
   firstPick: null,
   secondPick: null,
   matches: 0,
+  rows: 0,
+  columns: 0,
 };
 
 const classNames = {

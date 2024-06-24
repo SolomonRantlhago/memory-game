@@ -32,15 +32,24 @@ function createGridItem(image, index) {
   };
 }
 
-function initializeGameBoard() {
+function initializeGameBoard(rows, columns) {
   const gameBoard = document.getElementById(elementIds.gameBoardId);
   gameBoard.innerHTML = "";
-  const images = shuffleImages(gameState.uniqueImages);
-  images.forEach((image, index) => {
+
+  const images = gameState.uniqueImages
+    .sort(() => 0.5 - Math.random())
+    .slice(0, (rows * columns) / 2);
+  const shuffledImages = shuffleImages(images);
+  gameBoard.style.display = "grid";
+  gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+
+  shuffledImages.forEach((image, index) => {
     const { col } = createGridItem(image, index);
     gameBoard.appendChild(col);
   });
 }
+
 function onGridItemClick(event) {
   const gridItem = event.currentTarget;
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
@@ -53,6 +62,8 @@ function onGridItemClick(event) {
     gameState.firstPick = gridItem;
   } else {
     gameState.secondPick = gridItem;
+
+    document.getElementById(elementIds.gameBoardId).classList.add("no-click");
     setTimeout(() => {
       checkMatch({ first: gameState.firstPick, second: gameState.secondPick });
     }, 700);
@@ -69,7 +80,7 @@ function checkMatch({ first, second, matches = gameState.matches }) {
     first.classList.add(classNames.match);
     second.classList.add(classNames.match);
     updatedMatches += 1;
-    if (updatedMatches === gameState.uniqueImages.length) {
+    if (updatedMatches === (gameState.rows * gameState.columns) / 2) {
       setTimeout(
         () =>
           showCongratsModal({
@@ -89,16 +100,24 @@ function checkMatch({ first, second, matches = gameState.matches }) {
       second.querySelector("img").classList.add(classNames.dNoneClass);
     }, 700);
   }
+  setTimeout(() => {
+    document
+      .getElementById(elementIds.gameBoardId)
+      .classList.remove("no-click");
+  }, 500);
   gameState.firstPick = null;
   gameState.secondPick = null;
   gameState.matches = updatedMatches;
   return updatedMatches;
 }
 
-function startGame() {
+function startGame(rows, columns) {
   gameState.matches = 0;
   gameState.firstPick = null;
   gameState.secondPick = null;
+  gameState.rows = rows;
+  gameState.columns = columns;
+  initializeGameBoard(rows, columns);
 }
 
 function showCongratsModal({ message, title }) {
@@ -120,9 +139,27 @@ function setupEventListeners() {
 
   const startButton = () => {
     getElement(elementIds.startButtonId).addEventListener("click", () => {
-      const startModal = getModalInstance(elementIds.startModalId);
-      startModal.hide();
-      startGame();
+      const rows = parseInt(getElement("rowValue").value, 10);
+      const columns = parseInt(getElement("columnValue").value, 10);
+
+      if (!rows || !columns) {
+        getElement("error-message").textContent =
+          "Both row and column values are required.";
+        getElement("error-message").style.display = "block";
+      } else if (rows * columns > 12) {
+        getElement("error-message").textContent =
+          "The product of rows and columns should not exceed 12.";
+        getElement("error-message").style.display = "block";
+      } else if ((rows * columns) % 2 !== 0) {
+        getElement("error-message").textContent =
+          "The product of rows and columns should be an even number.";
+        getElement("error-message").style.display = "block";
+      } else {
+        getElement("error-message").style.display = "none";
+        const startModal = getModalInstance(elementIds.startModalId);
+        startModal.hide();
+        startGame(rows, columns);
+      }
     });
   };
 
@@ -130,8 +167,12 @@ function setupEventListeners() {
     getElement(elementIds.playAgainButtonId).addEventListener("click", () => {
       const congratsModal = getModalInstance(elementIds.congratsModalId);
       congratsModal.hide();
-      initializeGameBoard();
-      startGame();
+
+      getElement("rowValue").value = "";
+      getElement("columnValue").value = "";
+
+      const startModal = getModalInstance(elementIds.startModalId);
+      startModal.show();
     });
   };
 
@@ -150,7 +191,6 @@ function setupEventListeners() {
     keyboard: false,
   });
 
-  initializeGameBoard();
   startModal.show();
 }
 document.addEventListener("DOMContentLoaded", () => {

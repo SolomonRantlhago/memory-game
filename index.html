@@ -30,11 +30,35 @@
             </h5>
           </div>
           <div class="modal-body text-center">
-            <p>
-              Are you ready to test your memory skills? Click start to begin the
-              game!
-            </p>
+            <h3>Create Grid</h3>
+            <div class="mb-3">
+              <label for="rowValue" class="form-label">Rows:</label>
+              <input
+                type="number"
+                id="rowValue"
+                class="form-control"
+                min="2"
+                max="6"
+                placeholder="rows"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="columnValue" class="form-label">Columns:</label>
+              <input
+                type="number"
+                id="columnValue"
+                class="form-control"
+                min="2"
+                max="6"
+                placeholder="columns"
+              />
+            </div>
             <button id="start-button" class="btn btn-primary">Start</button>
+            <div
+              id="error-message"
+              class="text-danger mt-3"
+              style="display: none"
+            ></div>
           </div>
         </div>
       </div>

@@ -5,6 +5,10 @@ const gameState = {
   matches: 0,
   rows: 0,
   columns: 0,
+  minutes: 0,
+  seconds: 0,
+  totalseconds: 0,
+  timerInterval: null,
 };
 
 const classNames = {
@@ -32,6 +36,10 @@ const elementIds = {
   exitButtonId: "exit-button",
   startModalId: "startModal",
   congratsModalId: "congratsModal",
+  rowValueId: "rowValue",
+  columnValueId: "columnValue",
+  errorId: "error-message",
+  timerId: "timer",
 };
 
 const urls = {

@@ -109,6 +109,8 @@ describe("showCongratsModal", () => {
     const gridItem1 = createGridItem(image, index).gridItem;
     const gridItem2 = createGridItem(image, index).gridItem;
     startGame(2, 2);
+    gridItem1.click();
+    gridItem2.click();
     jasmine.clock().tick(1000);
     let result = checkMatch({
       first: gridItem1,
@@ -238,6 +240,7 @@ describe("Play again button click event", function () {
     expect(gameState.secondPick).toBeNull();
     expect(gameState.rows).toBe(2);
     expect(gameState.columns).toBe(2);
+    expect(gameState.timerStarted).toBe(false);
 
     jasmine.clock().uninstall();
   });
@@ -259,8 +262,14 @@ describe("Timer functionality", () => {
   });
 
   it("should update the timer correctly", () => {
-    const timerElement = document.getElementById("timer");
+    const timerElement = document.getElementById(elementIds.timerId);
     startGame(3, 4);
+
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+    const gridItem = createGridItem(image, index).gridItem;
+    gridItem.click();
+
     jasmine.clock().tick(30000);
     expect(timerElement.textContent).toBe("Time:00:30");
   });
@@ -276,6 +285,8 @@ describe("Timer functionality", () => {
 
     startGame(2, 2);
 
+    gridItem1.click();
+
     jasmine.clock().tick(1000);
 
     checkMatch({
@@ -289,11 +300,4 @@ describe("Timer functionality", () => {
     expect(timerElement.textContent).toBe("Time:00:01");
   });
 
-  it("should reset the timer when the game is reset", () => {
-    const timerElement = document.getElementById(elementIds.timerId);
-    startGame(3, 4);
-    jasmine.clock().tick(1000);
-    startGame(3, 4);
-    expect(timerElement.textContent).toBe("Time:00:00");
-  });
 });

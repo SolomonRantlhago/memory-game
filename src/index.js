@@ -7,7 +7,7 @@ const {
 } = require("./helper_objects");
 
 function startTimer() {
-  gameState.totalseconds = 0;
+  gameState.totalSeconds = 0;
   gameState.minutes = 0;
   gameState.seconds = 0;
   document.getElementById(elementIds.timerId).textContent = `Time:${String(
@@ -22,9 +22,9 @@ function stopTimer() {
 }
 
 function updateTimer() {
-  gameState.totalseconds++;
-  gameState.minutes = Math.floor(gameState.totalseconds / 60);
-  gameState.seconds = gameState.totalseconds % 60;
+  gameState.totalSeconds++;
+  gameState.minutes = Math.floor(gameState.totalSeconds / 60);
+  gameState.seconds = gameState.totalSeconds % 60;
   document.getElementById(elementIds.timerId).textContent = `Time:${String(
     gameState.minutes
   ).padStart(2, "0")}:${String(gameState.seconds).padStart(2, "0")}`;
@@ -74,6 +74,10 @@ function initializeGameBoard(rows, columns) {
 }
 
 function onGridItemClick(event) {
+  if (!gameState.timerStarted) {
+    startTimer();
+    gameState.timerStarted = true;
+  }
   const gridItem = event.currentTarget;
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
     return;
@@ -129,7 +133,7 @@ function checkMatch({ first, second, matches = gameState.matches }) {
 }
 
 function startGame(rows, columns) {
-  startTimer();
+  gameState.timerStarted = false;
   gameState.matches = 0;
   gameState.firstPick = null;
   gameState.secondPick = null;
@@ -207,7 +211,8 @@ function setupEventListeners() {
 
       getElement(elementIds.rowValueId).value = "";
       getElement(elementIds.columnValueId).value = "";
-
+      getElement(elementIds.gameBoardId).innerHTML = "";
+      getElement(elementIds.timerId).textContent = "Time:00:00";
       const startModal = getModalInstance(elementIds.startModalId);
       startModal.show();
     });

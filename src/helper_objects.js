@@ -7,8 +7,9 @@ const gameState = {
   columns: 0,
   minutes: 0,
   seconds: 0,
-  totalseconds: 0,
+  totalSeconds: 0,
   timerInterval: null,
+  timerStarted: false,
 };
 
 const classNames = {

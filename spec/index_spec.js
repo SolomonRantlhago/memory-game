@@ -108,7 +108,10 @@ describe("showCongratsModal", () => {
     gameState.columns = 2;
     const gridItem1 = createGridItem(image, index).gridItem;
     const gridItem2 = createGridItem(image, index).gridItem;
-
+    startGame(2, 2);
+    gridItem1.click();
+    gridItem2.click();
+    jasmine.clock().tick(1000);
     let result = checkMatch({
       first: gridItem1,
       second: gridItem2,
@@ -119,7 +122,7 @@ describe("showCongratsModal", () => {
     jasmine.clock().tick(700);
     expect(
       document.getElementById(elementIds.congratsMessageId).textContent
-    ).toBe(messages.congratsMessage);
+    ).toBe(`${messages.congratsMessage} You completed in 1 seconds.`);
     expect(
       document.getElementById(elementIds.congratsModalLabelId).textContent
     ).toBe(messages.congratsTitle);
@@ -237,7 +240,64 @@ describe("Play again button click event", function () {
     expect(gameState.secondPick).toBeNull();
     expect(gameState.rows).toBe(2);
     expect(gameState.columns).toBe(2);
+    expect(gameState.timerStarted).toBe(false);
 
     jasmine.clock().uninstall();
   });
+});
+
+describe("Timer functionality", () => {
+  beforeEach(() => {
+    jasmine.clock().install();
+
+    global.bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: jasmine.createSpy(),
+      }),
+    };
+  });
+
+  afterEach(() => {
+    jasmine.clock().uninstall();
+  });
+
+  it("should update the timer correctly", () => {
+    const timerElement = document.getElementById(elementIds.timerId);
+    startGame(3, 4);
+
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+    const gridItem = createGridItem(image, index).gridItem;
+    gridItem.click();
+
+    jasmine.clock().tick(30000);
+    expect(timerElement.textContent).toBe("Time:00:30");
+  });
+
+  it("should stop the timer when the game is over", () => {
+    const timerElement = document.getElementById(elementIds.timerId);
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+    gameState.rows = 2;
+    gameState.columns = 2;
+    const gridItem1 = createGridItem(image, index).gridItem;
+    const gridItem2 = createGridItem(image, index).gridItem;
+
+    startGame(2, 2);
+
+    gridItem1.click();
+
+    jasmine.clock().tick(1000);
+
+    checkMatch({
+      first: gridItem1,
+      second: gridItem2,
+      matches: 1,
+    });
+
+    jasmine.clock().tick(2000);
+
+    expect(timerElement.textContent).toBe("Time:00:01");
+  });
+
 });

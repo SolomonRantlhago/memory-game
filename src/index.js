@@ -6,6 +6,29 @@ const {
   urls,
 } = require("./helper_objects");
 
+function startTimer() {
+  gameState.totalSeconds = 0;
+  gameState.minutes = 0;
+  gameState.seconds = 0;
+  document.getElementById(elementIds.timerId).textContent = `Time:${String(
+    gameState.minutes
+  ).padStart(2, "0")}:${String(gameState.seconds).padStart(2, "0")}`;
+  clearInterval(gameState.timerInterval);
+  gameState.timerInterval = setInterval(updateTimer, 1000);
+}
+
+function stopTimer() {
+  clearInterval(gameState.timerInterval);
+}
+
+function updateTimer() {
+  gameState.totalSeconds++;
+  gameState.minutes = Math.floor(gameState.totalSeconds / 60);
+  gameState.seconds = gameState.totalSeconds % 60;
+  document.getElementById(elementIds.timerId).textContent = `Time:${String(
+    gameState.minutes
+  ).padStart(2, "0")}:${String(gameState.seconds).padStart(2, "0")}`;
+}
 function shuffleImages(images) {
   return images.concat(images).sort(() => 0.5 - Math.random());
 }
@@ -51,6 +74,10 @@ function initializeGameBoard(rows, columns) {
 }
 
 function onGridItemClick(event) {
+  if (!gameState.timerStarted) {
+    startTimer();
+    gameState.timerStarted = true;
+  }
   const gridItem = event.currentTarget;
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
     return;
@@ -81,14 +108,8 @@ function checkMatch({ first, second, matches = gameState.matches }) {
     second.classList.add(classNames.match);
     updatedMatches += 1;
     if (updatedMatches === (gameState.rows * gameState.columns) / 2) {
-      setTimeout(
-        () =>
-          showCongratsModal({
-            message: messages.congratsMessage,
-            title: messages.congratsTitle,
-          }),
-        700
-      );
+      stopTimer();
+      setTimeout(() => showCongratsModal(), 700);
     }
   } else {
     first.classList.add(classNames.unMatch);
@@ -112,6 +133,7 @@ function checkMatch({ first, second, matches = gameState.matches }) {
 }
 
 function startGame(rows, columns) {
+  gameState.timerStarted = false;
   gameState.matches = 0;
   gameState.firstPick = null;
   gameState.secondPick = null;
@@ -120,7 +142,7 @@ function startGame(rows, columns) {
   initializeGameBoard(rows, columns);
 }
 
-function showCongratsModal({ message, title }) {
+function showCongratsModal() {
   const congratsModal = new bootstrap.Modal(
     document.getElementById(elementIds.congratsModalId),
     {
@@ -128,8 +150,27 @@ function showCongratsModal({ message, title }) {
       keyboard: false,
     }
   );
-  document.getElementById(elementIds.congratsMessageId).textContent = message;
-  document.getElementById(elementIds.congratsModalLabelId).textContent = title;
+  const timeString =
+    gameState.minutes > 0
+      ? `${gameState.minutes} minutes and ${gameState.seconds} seconds`
+      : `${gameState.seconds} seconds`;
+
+  const congratsMessageElement = document.getElementById(
+    elementIds.congratsMessageId
+  );
+  congratsMessageElement.textContent = `${messages.congratsMessage} You completed in ${timeString}.`;
+  congratsMessageElement.style.fontSize = "1.2rem";
+  congratsMessageElement.style.fontWeight = "bold";
+  congratsMessageElement.style.color = "#28a745";
+
+  const congratsTitleElement = document.getElementById(
+    elementIds.congratsModalLabelId
+  );
+  congratsTitleElement.textContent = messages.congratsTitle;
+  congratsTitleElement.style.fontSize = "1.5rem";
+  congratsTitleElement.style.fontWeight = "bold";
+  congratsTitleElement.style.color = "#007bff";
+
   congratsModal.show();
 }
 
@@ -139,23 +180,23 @@ function setupEventListeners() {
 
   const startButton = () => {
     getElement(elementIds.startButtonId).addEventListener("click", () => {
-      const rows = parseInt(getElement("rowValue").value, 10);
-      const columns = parseInt(getElement("columnValue").value, 10);
+      const rows = parseInt(getElement(elementIds.rowValueId).value, 10);
+      const columns = parseInt(getElement(elementIds.columnValueId).value, 10);
 
       if (!rows || !columns) {
-        getElement("error-message").textContent =
+        getElement(elementIds.errorId).textContent =
           "Both row and column values are required.";
-        getElement("error-message").style.display = "block";
+        getElement(elementIds.errorId).style.display = "block";
       } else if (rows * columns > 12) {
-        getElement("error-message").textContent =
+        getElement(elementIds.errorId).textContent =
           "The product of rows and columns should not exceed 12.";
-        getElement("error-message").style.display = "block";
+        getElement(elementIds.errorId).style.display = "block";
       } else if ((rows * columns) % 2 !== 0) {
-        getElement("error-message").textContent =
+        getElement(elementIds.errorId).textContent =
           "The product of rows and columns should be an even number.";
-        getElement("error-message").style.display = "block";
+        getElement(elementIds.errorId).style.display = "block";
       } else {
-        getElement("error-message").style.display = "none";
+        getElement(elementIds.errorId).style.display = "none";
         const startModal = getModalInstance(elementIds.startModalId);
         startModal.hide();
         startGame(rows, columns);
@@ -168,9 +209,10 @@ function setupEventListeners() {
       const congratsModal = getModalInstance(elementIds.congratsModalId);
       congratsModal.hide();
 
-      getElement("rowValue").value = "";
-      getElement("columnValue").value = "";
-
+      getElement(elementIds.rowValueId).value = "";
+      getElement(elementIds.columnValueId).value = "";
+      getElement(elementIds.gameBoardId).innerHTML = "";
+      getElement(elementIds.timerId).textContent = "Time:00:00";
       const startModal = getModalInstance(elementIds.startModalId);
       startModal.show();
     });

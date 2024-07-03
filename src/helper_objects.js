@@ -10,6 +10,7 @@ const gameState = {
   totalSeconds: 0,
   timerInterval: null,
   timerStarted: false,
+  moves: 0,
 };
 
 const classNames = {
@@ -24,7 +25,7 @@ const classNames = {
 };
 
 const messages = {
-  congratsMessage: "Congratulations! You matched all the pairs!",
+  congratsMessage: "Congratulations! You matched all the pairs",
   congratsTitle: "Congratulations!",
 };
 
@@ -41,6 +42,7 @@ const elementIds = {
   columnValueId: "columnValue",
   errorId: "error-message",
   timerId: "timer",
+  movesId: "moves",
 };
 
 const urls = {

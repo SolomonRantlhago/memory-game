@@ -95,6 +95,10 @@ function onGridItemClick(event) {
       checkMatch({ first: gameState.firstPick, second: gameState.secondPick });
     }, 700);
   }
+
+  document.getElementById(
+    elementIds.movesId
+  ).textContent = `Moves: ${++gameState.moves}`;
 }
 
 window.redirect = function (destination) {
@@ -158,7 +162,7 @@ function showCongratsModal() {
   const congratsMessageElement = document.getElementById(
     elementIds.congratsMessageId
   );
-  congratsMessageElement.textContent = `${messages.congratsMessage} You completed in ${timeString}.`;
+  congratsMessageElement.textContent = `${messages.congratsMessage} in just ${timeString} with ${gameState.moves} moves!.`;
   congratsMessageElement.style.fontSize = "1.2rem";
   congratsMessageElement.style.fontWeight = "bold";
   congratsMessageElement.style.color = "#28a745";
@@ -214,6 +218,8 @@ function setupEventListeners() {
       getElement(elementIds.gameBoardId).innerHTML = "";
       getElement(elementIds.timerId).textContent = "Time:00:00";
       const startModal = getModalInstance(elementIds.startModalId);
+      gameState.moves = 0;
+      getElement(elementIds.movesId).textContent = `Moves: ${gameState.moves}`;
       startModal.show();
     });
   };

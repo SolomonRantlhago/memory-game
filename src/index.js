@@ -143,6 +143,7 @@ function startGame(rows, columns) {
   gameState.secondPick = null;
   gameState.rows = rows;
   gameState.columns = columns;
+  gameState.moves = 0;
   initializeGameBoard(rows, columns);
 }
 
@@ -218,8 +219,7 @@ function setupEventListeners() {
       getElement(elementIds.gameBoardId).innerHTML = "";
       getElement(elementIds.timerId).textContent = "Time:00:00";
       const startModal = getModalInstance(elementIds.startModalId);
-      gameState.moves = 0;
-      getElement(elementIds.movesId).textContent = `Moves: ${gameState.moves}`;
+      getElement(elementIds.movesId).textContent = `Moves: 0`;
       startModal.show();
     });
   };

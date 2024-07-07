@@ -4,6 +4,8 @@ const {
   initializeGameBoard,
   checkMatch,
   startGame,
+  resetGame,
+  stopTimer,
 } = require("../src/index");
 
 const {
@@ -304,5 +306,41 @@ describe("Timer and moves functionality", () => {
     jasmine.clock().tick(2000);
 
     expect(timerElement.textContent).toBe("Time:00:01");
+  });
+});
+
+describe("restart button click event", function () {
+  it("should reset the game and start again when restart button is clicked", function () {
+    const restartButton = document.getElementById(elementIds.restartButtonId);
+
+    restartButton.addEventListener("click", () => {
+      resetGame();
+      startGame(2, 2);
+    });
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+    gameState.rows = 2;
+    gameState.columns = 2;
+
+    const gridItem1 = createGridItem(image, index).gridItem;
+    startGame(2, 2);
+
+    gridItem1.click();
+
+    restartButton.click();
+
+    expect(document.getElementById(elementIds.timerId).textContent).toBe(
+      "Time:00:00"
+    );
+    expect(document.getElementById(elementIds.movesId).textContent).toBe(
+      "Moves: 0"
+    );
+    expect(document.getElementById(elementIds.rowValueId).textContent).toBe("");
+    expect(document.getElementById(elementIds.columnValueId).textContent).toBe(
+      ""
+    );
+    expect(document.getElementById(elementIds.gameBoardId).textContent).toBe(
+      ""
+    );
   });
 });

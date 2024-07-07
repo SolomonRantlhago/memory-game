@@ -43,6 +43,8 @@ const elementIds = {
   errorId: "error-message",
   timerId: "timer",
   movesId: "moves",
+  restartButtonContainerId: "restart-button-container",
+  restartButtonId: "restart-button",
 };
 
 const urls = {

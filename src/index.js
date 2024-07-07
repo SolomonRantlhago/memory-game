@@ -68,7 +68,16 @@ function initializeGameBoard(rows, columns) {
   gameBoard.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
 
   shuffledImages.forEach((image, index) => {
-    const { col } = createGridItem(image, index);
+    const { col, gridItem } = createGridItem(image, index);
+    if (rows === 5) {
+      gridItem.style.height = "80px";
+      gridItem.style.width = "80px";
+    } else {
+      if (rows === 6) {
+        gridItem.style.height = "70px";
+        gridItem.style.width = "70px";
+      }
+    }
     gameBoard.appendChild(col);
   });
 }
@@ -77,6 +86,8 @@ function onGridItemClick(event) {
   if (!gameState.timerStarted) {
     startTimer();
     gameState.timerStarted = true;
+    document.getElementById(elementIds.restartButtonContainerId).style.display =
+      "flex";
   }
   const gridItem = event.currentTarget;
   if (gridItem.classList.contains(classNames.show) || gameState.secondPick) {
@@ -113,6 +124,9 @@ function checkMatch({ first, second, matches = gameState.matches }) {
     updatedMatches += 1;
     if (updatedMatches === (gameState.rows * gameState.columns) / 2) {
       stopTimer();
+      document.getElementById(
+        elementIds.restartButtonContainerId
+      ).style.display = "none";
       setTimeout(() => showCongratsModal(), 700);
     }
   } else {
@@ -178,6 +192,24 @@ function showCongratsModal() {
 
   congratsModal.show();
 }
+function resetGame() {
+  document.getElementById(elementIds.gameBoardId).innerHTML = "";
+  document.getElementById(elementIds.rowValueId).value = "";
+  document.getElementById(elementIds.columnValueId).value = "";
+  document.getElementById(elementIds.timerId).textContent = "Time:00:00";
+  document.getElementById(elementIds.movesId).textContent = `Moves: 0`;
+  document.getElementById(elementIds.restartButtonContainerId).style.display =
+    "none";
+
+  const startModal = new bootstrap.Modal(
+    document.getElementById(elementIds.startModalId),
+    {
+      backdrop: "static",
+      keyboard: false,
+    }
+  );
+  startModal.show();
+}
 
 function setupEventListeners() {
   const getElement = (id) => document.getElementById(id);
@@ -213,14 +245,14 @@ function setupEventListeners() {
     getElement(elementIds.playAgainButtonId).addEventListener("click", () => {
       const congratsModal = getModalInstance(elementIds.congratsModalId);
       congratsModal.hide();
+      resetGame();
+    });
+  };
 
-      getElement(elementIds.rowValueId).value = "";
-      getElement(elementIds.columnValueId).value = "";
-      getElement(elementIds.gameBoardId).innerHTML = "";
-      getElement(elementIds.timerId).textContent = "Time:00:00";
-      const startModal = getModalInstance(elementIds.startModalId);
-      getElement(elementIds.movesId).textContent = `Moves: 0`;
-      startModal.show();
+  const restartButton = () => {
+    getElement(elementIds.restartButtonId).addEventListener("click", () => {
+      stopTimer();
+      resetGame();
     });
   };
 
@@ -233,6 +265,7 @@ function setupEventListeners() {
   startButton();
   playAgainButton();
   exitButton();
+  restartButton();
 
   const startModal = new bootstrap.Modal(getElement(elementIds.startModalId), {
     backdrop: "static",
@@ -251,4 +284,6 @@ module.exports = {
   initializeGameBoard,
   checkMatch,
   startGame,
+  resetGame,
+  stopTimer,
 };

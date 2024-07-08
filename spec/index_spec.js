@@ -4,6 +4,8 @@ const {
   initializeGameBoard,
   checkMatch,
   startGame,
+  resetGame,
+  stopTimer,
 } = require("../src/index");
 
 const {
@@ -77,6 +79,7 @@ describe("checkMatch", () => {
     expect(gridItem1.classList.contains(classNames.match)).toBe(true);
     expect(gridItem2.classList.contains(classNames.match)).toBe(true);
     expect(gameState.matches).toBe(1);
+    expect(gameState.moves).toBe(2);
   });
 
   it("should add 'un-match' class if images don't match", () => {
@@ -89,6 +92,7 @@ describe("checkMatch", () => {
     expect(gridItem1.classList.contains(classNames.match)).toBe(false);
     expect(gridItem2.classList.contains(classNames.match)).toBe(false);
     expect(gameState.matches).toBe(0);
+    expect(gameState.moves).toBe(2);
   });
 });
 
@@ -122,7 +126,7 @@ describe("showCongratsModal", () => {
     jasmine.clock().tick(700);
     expect(
       document.getElementById(elementIds.congratsMessageId).textContent
-    ).toBe(`${messages.congratsMessage} You completed in 1 seconds.`);
+    ).toBe(`${messages.congratsMessage} in just 1 seconds with 2 moves!.`);
     expect(
       document.getElementById(elementIds.congratsModalLabelId).textContent
     ).toBe(messages.congratsTitle);
@@ -139,6 +143,7 @@ describe("startGame", () => {
     expect(gameState.secondPick).toBeNull();
     expect(gameState.rows).toBe(3);
     expect(gameState.columns).toBe(4);
+    expect(gameState.moves).toBe(0);
   });
 });
 
@@ -241,12 +246,13 @@ describe("Play again button click event", function () {
     expect(gameState.rows).toBe(2);
     expect(gameState.columns).toBe(2);
     expect(gameState.timerStarted).toBe(false);
+    expect(gameState.moves).toBe(0);
 
     jasmine.clock().uninstall();
   });
 });
 
-describe("Timer functionality", () => {
+describe("Timer and moves functionality", () => {
   beforeEach(() => {
     jasmine.clock().install();
 
@@ -261,8 +267,9 @@ describe("Timer functionality", () => {
     jasmine.clock().uninstall();
   });
 
-  it("should update the timer correctly", () => {
+  it("should update the timer and Moves counter correctly", () => {
     const timerElement = document.getElementById(elementIds.timerId);
+    const movesElement = document.getElementById(elementIds.movesId);
     startGame(3, 4);
 
     const image = gameState.uniqueImages[0];
@@ -272,6 +279,7 @@ describe("Timer functionality", () => {
 
     jasmine.clock().tick(30000);
     expect(timerElement.textContent).toBe("Time:00:30");
+    expect(movesElement.textContent).toBe("Moves: 1");
   });
 
   it("should stop the timer when the game is over", () => {
@@ -299,5 +307,40 @@ describe("Timer functionality", () => {
 
     expect(timerElement.textContent).toBe("Time:00:01");
   });
+});
 
+describe("restart button click event", function () {
+  it("should reset the game and start again when restart button is clicked", function () {
+    const restartButton = document.getElementById(elementIds.restartButtonId);
+
+    restartButton.addEventListener("click", () => {
+      resetGame();
+      startGame(2, 2);
+    });
+    const image = gameState.uniqueImages[0];
+    const index = 0;
+    gameState.rows = 2;
+    gameState.columns = 2;
+
+    const gridItem1 = createGridItem(image, index).gridItem;
+    startGame(2, 2);
+
+    gridItem1.click();
+
+    restartButton.click();
+
+    expect(document.getElementById(elementIds.timerId).textContent).toBe(
+      "Time:00:00"
+    );
+    expect(document.getElementById(elementIds.movesId).textContent).toBe(
+      "Moves: 0"
+    );
+    expect(document.getElementById(elementIds.rowValueId).textContent).toBe("");
+    expect(document.getElementById(elementIds.columnValueId).textContent).toBe(
+      ""
+    );
+    expect(document.getElementById(elementIds.gameBoardId).textContent).toBe(
+      ""
+    );
+  });
 });

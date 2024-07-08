@@ -13,6 +13,18 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      body {
+        background-color: #e0e0e0;
+      }
+
+      .flex-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
+    </style>
   </head>
   <body>
     <div
@@ -92,11 +104,19 @@
     <div
       class="container d-flex flex-column justify-content-center align-items-center"
     >
-      <h1 class="custom-heading mt-3">Memory Game</h1>
+      <div class="flex-container">
+        <h1 class="custom-heading flex-item-center">Memory Game</h1>
+        <div id="timer-container">
+          <div id="timer">Time:00:00</div>
+          <div id="moves">Moves:0</div>
+        </div>
+      </div>
       <div class="row justify-content-center">
-        <div id="timer" class="align-self-center left">Time:00:00</div>
         <div class="col-12 col-sm-10 col-md-8 col-lg-6" id="game-container">
-          <div class="row g-3 justify-content-center" id="game-board"></div>
+          <div class="row justify-content-center" id="game-board"></div>
+        </div>
+        <div id="restart-button-container">
+          <button id="restart-button" class="btn btn-primary">Restart</button>
         </div>
       </div>
     </div>

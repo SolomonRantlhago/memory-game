@@ -211,6 +211,28 @@ function resetGame() {
   startModal.show();
 }
 
+function validateAndStartGame(rows, columns) {
+  const getElement = (id) => document.getElementById(id);
+  const getModalInstance = (id) => bootstrap.Modal.getInstance(getElement(id));
+
+  if (!rows || !columns) {
+    getElement(elementIds.errorId).textContent = messages.rowsColumnsRequired;
+    getElement(elementIds.errorId).style.display = "block";
+  } else if (rows * columns > 12) {
+    getElement(elementIds.errorId).textContent =
+      messages.rowsColumnsGreaterThan12;
+    getElement(elementIds.errorId).style.display = "block";
+  } else if ((rows * columns) % 2 !== 0) {
+    getElement(elementIds.errorId).textContent = messages.rowsColumnsEven;
+    getElement(elementIds.errorId).style.display = "block";
+  } else {
+    getElement(elementIds.errorId).style.display = "none";
+    const startModal = getModalInstance(elementIds.startModalId);
+    startModal.hide();
+    startGame(rows, columns);
+  }
+}
+
 function setupEventListeners() {
   const getElement = (id) => document.getElementById(id);
   const getModalInstance = (id) => bootstrap.Modal.getInstance(getElement(id));
@@ -220,24 +242,7 @@ function setupEventListeners() {
       const rows = parseInt(getElement(elementIds.rowValueId).value, 10);
       const columns = parseInt(getElement(elementIds.columnValueId).value, 10);
 
-      if (!rows || !columns) {
-        getElement(elementIds.errorId).textContent =
-          "Both row and column values are required.";
-        getElement(elementIds.errorId).style.display = "block";
-      } else if (rows * columns > 12) {
-        getElement(elementIds.errorId).textContent =
-          "The product of rows and columns should not exceed 12.";
-        getElement(elementIds.errorId).style.display = "block";
-      } else if ((rows * columns) % 2 !== 0) {
-        getElement(elementIds.errorId).textContent =
-          "The product of rows and columns should be an even number.";
-        getElement(elementIds.errorId).style.display = "block";
-      } else {
-        getElement(elementIds.errorId).style.display = "none";
-        const startModal = getModalInstance(elementIds.startModalId);
-        startModal.hide();
-        startGame(rows, columns);
-      }
+      validateAndStartGame(rows, columns);
     });
   };
 
@@ -285,5 +290,5 @@ module.exports = {
   checkMatch,
   startGame,
   resetGame,
-  stopTimer,
+  validateAndStartGame,
 };

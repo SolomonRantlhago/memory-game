@@ -27,6 +27,10 @@ const classNames = {
 const messages = {
   congratsMessage: "Congratulations! You matched all the pairs",
   congratsTitle: "Congratulations!",
+  rowsColumnsRequired: "Both row and column values are required",
+  rowsColumnsGreaterThan12:
+    "The product of rows and columns should not exceed 12",
+  rowsColumnsEven: "The product of rows and columns should be an even number",
 };
 
 const elementIds = {

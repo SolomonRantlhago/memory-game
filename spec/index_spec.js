@@ -52,12 +52,6 @@ describe("checkMatch", () => {
   let image1;
   let image2;
   beforeEach(() => {
-    global.bootstrap = {
-      Modal: jasmine.createSpy().and.returnValue({
-        show: jasmine.createSpy(),
-      }),
-    };
-
     startGame();
     jasmine.clock().install();
 
@@ -98,7 +92,7 @@ describe("checkMatch", () => {
 
 describe("showCongratsModal", () => {
   beforeEach(() => {
-    global.bootstrap = {
+    bootstrap = {
       Modal: jasmine.createSpy().and.returnValue({
         show: jasmine.createSpy(),
       }),
@@ -131,6 +125,14 @@ describe("showCongratsModal", () => {
       document.getElementById(elementIds.congratsModalLabelId).textContent
     ).toBe(messages.congratsTitle);
     jasmine.clock().uninstall();
+
+    expect(bootstrap.Modal).toHaveBeenCalledWith(
+      document.getElementById(elementIds.congratsModalId),
+      {
+        backdrop: "static",
+        keyboard: false,
+      }
+    );
   });
 });
 
@@ -171,7 +173,7 @@ describe("Exit button click event", function () {
       });
     });
 
-    global.bootstrap = {
+    bootstrap = {
       Modal: jasmine.createSpy().and.returnValue({
         show: bootstrapModalShowSpy,
       }),
@@ -200,6 +202,14 @@ describe("Exit button click event", function () {
     exitButton.click();
 
     expect(window.redirect).toHaveBeenCalledWith(urls.exit);
+
+    expect(bootstrap.Modal).toHaveBeenCalledWith(
+      document.getElementById(elementIds.congratsModalId),
+      {
+        backdrop: "static",
+        keyboard: false,
+      }
+    );
 
     jasmine.clock().uninstall();
   });
@@ -247,6 +257,13 @@ describe("Play again button click event", function () {
     expect(gameState.columns).toBe(2);
     expect(gameState.timerStarted).toBe(false);
     expect(gameState.moves).toBe(0);
+    expect(bootstrap.Modal).toHaveBeenCalledWith(
+      document.getElementById(elementIds.congratsModalId),
+      {
+        backdrop: "static",
+        keyboard: false,
+      }
+    );
 
     jasmine.clock().uninstall();
   });
@@ -271,20 +288,18 @@ describe("start Button click event", function () {
 
     bootstrapModalHideSpy = jasmine.createSpy("hide").and.callFake(() => {});
 
-    global.bootstrap = {
+    bootstrap = {
       Modal: jasmine.createSpy().and.returnValue({
         show: bootstrapModalShowSpy,
         hide: bootstrapModalHideSpy,
       }),
     };
 
-    global.bootstrap.Modal.getInstance = jasmine
-      .createSpy()
-      .and.callFake(() => {
-        return {
-          hide: bootstrapModalHideSpy,
-        };
-      });
+    bootstrap.Modal.getInstance = jasmine.createSpy().and.callFake(() => {
+      return {
+        hide: bootstrapModalHideSpy,
+      };
+    });
 
     startModal = new bootstrap.Modal(
       document.getElementById(elementIds.startModalId),
@@ -299,9 +314,8 @@ describe("start Button click event", function () {
     gameState.columns = 3;
     startModal.show();
     startButton.click();
-    expect(errorId.textContent).toBe(
-      messages.rowsColumnsEven
-    );
+    expect(errorId.textContent).toBe(messages.rowsColumnsEven);
+    expect(bootstrapModalShowSpy).toHaveBeenCalled();
   });
 
   it("should display error when (rows * columns) is greater than 12", function () {
@@ -310,9 +324,7 @@ describe("start Button click event", function () {
     startModal.show();
     startButton.click();
     expect(bootstrapModalShowSpy).toHaveBeenCalled();
-    expect(errorId.textContent).toBe(
-      messages.rowsColumnsGreaterThan12
-    );
+    expect(errorId.textContent).toBe(messages.rowsColumnsGreaterThan12);
   });
 
   it("should display error when rows or columns are not provided", function () {
@@ -321,6 +333,7 @@ describe("start Button click event", function () {
     startModal.show();
     startButton.click();
     expect(errorId.textContent).toBe(messages.rowsColumnsRequired);
+    expect(bootstrapModalShowSpy).toHaveBeenCalled();
   });
 
   it("should start the game when (rows * columns) is an even number and less than 12", function () {
@@ -328,6 +341,7 @@ describe("start Button click event", function () {
     gameState.columns = 2;
     startModal.show();
     startButton.click();
+    expect(bootstrapModalShowSpy).toHaveBeenCalled();
     expect(bootstrapModalHideSpy).toHaveBeenCalled();
     expect(gameBoard.childElementCount).toBe(4);
   });
@@ -337,7 +351,7 @@ describe("Timer and moves functionality", () => {
   beforeEach(() => {
     jasmine.clock().install();
 
-    global.bootstrap = {
+    bootstrap = {
       Modal: jasmine.createSpy().and.returnValue({
         show: jasmine.createSpy(),
       }),
@@ -386,11 +400,26 @@ describe("Timer and moves functionality", () => {
 
     jasmine.clock().tick(2000);
 
+    expect(bootstrap.Modal).toHaveBeenCalledWith(
+      document.getElementById(elementIds.congratsModalId),
+      {
+        backdrop: "static",
+        keyboard: false,
+      }
+    );
+
     expect(timerElement.textContent).toBe("Time:00:01");
   });
 });
 
 describe("restart button click event", function () {
+  beforeEach(() => {
+    bootstrap = {
+      Modal: jasmine.createSpy().and.returnValue({
+        show: jasmine.createSpy(),
+      }),
+    };
+  });
   it("should reset the game and start again when restart button is clicked", function () {
     const restartButton = document.getElementById(elementIds.restartButtonId);
 
@@ -422,6 +451,14 @@ describe("restart button click event", function () {
     );
     expect(document.getElementById(elementIds.gameBoardId).textContent).toBe(
       ""
+    );
+
+    expect(bootstrap.Modal).toHaveBeenCalledWith(
+      document.getElementById(elementIds.startModalId),
+      {
+        backdrop: "static",
+        keyboard: false,
+      }
     );
   });
 });
